@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+<meta charset="utf-8">
+
+
+<style>
+@import 'https://fonts.googleapis.com/css?family=Roboto+Slab';
+
+body {
+  font: 12px "Roboto Slab";
+}
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.dot {
+  stroke: #000;
+}
+
+.triangle{
+stroke: #000
+}
+
+.rectangle {
+stroke:#000
+}
+
+.title {
+font-size: 16px;
+}
+.tooltip {
+  position: absolute;
+  width: 200px;
+  height: 28px;
+  pointer-events: none;
+}
+</style>
+<body>
+<script src="../lib/d3.v3.min.js"></script>
+
+<script>
+var margin = {top: 20, right: 20, bottom: 30, left: 40},
+    width = 800
+    height = 400
+
+var x = d3.scale.linear()
+    .range([0, width]);
+
+var y = d3.scale.linear()
+    .range([height, 0]);
+
+var svg = d3.select("body").append("svg")
+    .attr("width", 900)
+    .attr("height", 450)
+  .append("g")
+    .attr("transform", "translate(" + 30 + "," + 30 + ")");
+
+var colorRange = d3.scale.category10();
+
+
+d3.tsv("iris.tsv", function(data) {
+
+
+  
+  data.forEach(function(d) {
+    d.sepalLength = +d.sepalLength;
+    d.sepalWidth = +d.sepalWidth;
+	d.petalLength = +d.petalLength;
+	d.petalWidth = +d.petalWidth;	
+	
+  });
+
+  
+  x.domain([d3.min(data, function(d) { return d.sepalLength; })-0.1, d3.max(data, function(d) { return d.sepalLength; })+0.1]).nice();
+  y.domain([d3.min(data, function(d) { return d.sepalWidth; })-0.2, d3.max(data, function(d) { return d.sepalWidth; })+0.2]).nice();
+  
+
+  // x-axis.
+  svg.append("g")
+      .attr("class", "x axis")
+      .attr("transform", "translate(0,400)")
+      .call(d3.svg.axis().scale(x).orient("bottom"))
+	  .append("text")
+	  .attr("x", 860)	
+      .attr("y", -10)
+	  .attr("class", "label")
+	  .style("text-anchor", "end")
+	  .text("Sepal Length (cm)") ;
+	  
+
+  //y-axis.
+  svg.append("g")
+      .attr("class", "y axis")
+      .call(d3.svg.axis().scale(y).orient("left"))
+	  .append("text")
+      .attr("class", "label")
+      .attr("transform", "rotate(-90)")
+      .attr("x", -20)
+	  .attr("y", 20)
+      .attr("dy", ".201em")
+      .style("text-anchor", "end")
+	  .text("Sepal Width (cm)");
+
+	  
+  
+  svg.selectAll(".dot")
+      .data(data)
+    .enter().append("circle")
+	.filter(function(d){ return d.species =="setosa" } )
+      .attr("class", "dot")
+	  .style("fill", "white") 
+	  .style("stroke", function(d) {return colorRange(d.species);})
+      .attr("r",4.5)
+      .attr("cx", function(d) { return x(d.sepalLength); })
+      .attr("cy", function(d) { return y(d.sepalWidth); });
+	  
+	svg.selectAll("rect")
+      .data(data)
+    .enter().append("rect")
+	.filter(function(d){ return d.species =="versicolor" } )
+      .attr("class", "rectangle")
+	  .style("fill", "white") 
+	  .style("stroke", function(d) {return colorRange(d.species);})
+      .attr("x", function(d) { return x(d.sepalLength); })
+      .attr("y", function(d) { return y(d.sepalWidth); })
+	  .attr("width", 7.5)
+	  .attr("height", 7.5 )
+	  ;	  
+	  
+	  svg.selectAll(".point")
+      .data(data)
+    .enter().append("path")
+	.filter(function(d){ return d.species =="virginica" } )
+      .attr("class", "point")
+	  .attr("d" , d3.svg.symbol().type("triangle-up")) 
+	  .style("fill", "white") 
+	  .style("stroke", function(d) {return colorRange(d.species);})
+	  .attr("transform", function(d) { return "translate(" + x(d.sepalLength) + "," + y(d.sepalWidth) + ")"; });
+
+	svg.append("text")  
+		.text("Sepal Width vs Sepal Length")
+		.attr("x", width/2-100)
+		.attr("class", ".title")
+		.attr("font-size", "20px");
+		
+var legend = svg.selectAll(".legend")
+      .data(colorRange.domain())
+    .enter().append("g")
+      .attr("class", "legend")
+      .attr("transform", function(d, i) { return "translate(0," + i * 20 + ")"; });
+
+ 
+legend.append("path")
+      .filter(function(d) {return d == "virginica"})
+	  .attr("d" , d3.svg.symbol().type("triangle-up")) 
+	  .attr("transform", function(d) { return "translate(" + (width-11) + "," + (10) + ")"; })
+      .style("stroke", colorRange)
+	  .attr("fill", "white"); 	    
+
+
+  legend.append("rect")
+      .filter(function(d) {return d == "versicolor"})
+	  .attr("x", width - 15)
+	  .attr("y", 5)
+      .attr("width", 7.5)
+      .attr("height", 7.5)	  
+      .style("stroke", colorRange)
+	  .attr("fill", "white"); 
+ 
+ legend.append("circle")
+      .filter(function(d) {return d == "setosa"})
+	  .attr("r", 4.5)
+	  .attr("cx", width - 12)
+      .attr("cy", 8)
+      .style("stroke", colorRange)
+	  .attr("fill", "white"); 	  
+
+
+	  
+  // draw legend text
+  legend.append("text")
+      .attr("x", width - 24)
+      .attr("y", 9)
+      .attr("dy", ".35em")
+      .style("text-anchor", "end")
+      .text(function(d) { return d;})
+	  
+});
+
+
+
+
+
+</script>
+
+
+
+</body>
+</html>
