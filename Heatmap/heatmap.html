@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+
+@import 'https://fonts.googleapis.com/css?family=Roboto+Slab';
+
+body {
+  font: 10px "Roboto Slab";
+}
+
+.label {
+  font-weight: bold;
+}
+
+.tile {
+  shape-rendering: crispEdges;
+}
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+</style>
+<body>
+<script src="../lib/d3.v3.min.js"></script>
+<script>
+
+var width = 900 ;
+    height = 450;
+	
+var x = d3.scale.linear()
+	    .range([0, width]);
+
+var y = d3.scale.linear()
+		.range([height, 0]);
+
+var z = d3.scale.linear()
+		.range(["white", "red"]);		
+    
+    
+x.domain([0,24]).nice();
+
+z.domain([0,160]).nice();
+
+
+var formatTime = d3.time.format("%I %p"),
+    formatHour = function (d) {      
+      return formatTime(new Date(2016, 1, 1, d, 00));
+    };	
+	
+
+	
+var chart1= d3.select("body").append("svg")
+    .attr("width", 1000)
+    .attr("height", 500)
+  .append("g")
+    .attr("transform", "translate(" + 30 + "," + 30 + ")");
+	
+d3.json("hourly_heatmap.json", function(data) {
+
+	
+var readings1 = chart1.selectAll(".readings")
+      .data(data)
+    .enter().append("g")
+      .attr("class", "readings")
+      ;	
+
+
+y.domain([0, d3.max(data, function(d) { return d.key; })]).nice();
+
+
+  
+  readings1.selectAll(".tile")
+      .data(function (d) { return d.values; })
+    .enter( ).append("rect")
+      .attr({"class": "tile", "x": function (d, i) { return x(i); }, "width": function (d, i) { return  x(i+1) - x(i); }})
+      .style("fill", function(d) { return z(d); });
+  
+  
+  readings1.each(function (d) {
+    d3.select(this).selectAll(".tile")
+        .attr({"y": y(d.key), "height": 20 });
+  });
+
+  //svg
+  chart1.append("g")
+      .attr("class", "x axis")
+      .attr("transform", "translate(0," + height + ")")
+      .call(d3.svg.axis().scale(x).orient("bottom").tickFormat(formatHour))
+	  .append("text")
+	  .attr("x", 880)	
+      .attr("y", -10)
+	  .attr("class", "label")
+	  .style("text-anchor", "end")
+	  .text("Time of Day");
+
+  
+  chart1.append("g")
+      .attr("class", "y axis")
+      .call(d3.svg.axis().scale(y).orient("left").tickFormat(d3.format("d")))
+	  .append("text")
+      .attr("class", "label")
+      .attr("transform", "rotate(-90)")
+      .attr("x", -20)
+	  .attr("y", 20)
+      .attr("dy", ".201em")
+      .style("text-anchor", "end")
+	  .text("Glucose Reading");
+
+	  chart1.append("text")  
+		.text("Glucose Reading vs Time of Day")
+		.attr("x", width/2 - 100)
+		.attr("class", ".title")
+		.attr("font-size", "20px");
+
+	  
+});
+
+
+	
+var chart2 = d3.select("body").append("svg")
+    .attr("width", 1000)
+    .attr("height", 500)
+  .append("g")
+    .attr("transform", "translate(" + 30 + "," + 30 + ")");
+
+
+d3.json("day_heatmap.json", function(data) {
+
+   
+var z = d3.scale.linear()
+		.range(["white", "red"]);	
+		
+x.domain([0,7]).nice();
+
+z.domain([0,450]).nice();
+
+
+var formatTime = d3.time.format("%A"),
+    formatHour = function (d) {      
+      return formatTime(new Date(2016, 1, d, 0, 00));
+    };	
+	
+
+ var readings2 = chart2.selectAll(".readings")
+      .data(data)
+    .enter().append("g")
+      .attr("class", "readings")
+      ;	
+
+
+y.domain([0, d3.max(data, function(d) { return d.key; })]).nice();
+
+
+  
+  readings2.selectAll(".tile")
+      .data(function (d) { return d.values; })
+    .enter( ).append("rect")
+      .attr({"class": "tile", "x": function (d, i) { return x(i); }, "width": function (d, i) { return  x(i+1) - x(i); }})
+      .style("fill", function(d) { return z(d); });
+  
+  
+  readings2.each(function (d) {
+    d3.select(this).selectAll(".tile")
+        .attr({"y": y(d.key), "height": 20 });
+  });
+
+  readings2.append("g")
+      .attr("class", "x axis")
+      .attr("transform", "translate(0,450)")
+      .call(d3.svg.axis().scale(x).orient("bottom").tickFormat(formatHour))
+	  .append("text")
+	  .attr("x", 880)	
+      .attr("y", -10)
+	  .attr("class", "label")
+	  .style("text-anchor", "end")
+	  .text("Day of Week");
+
+  readings2.append("g")
+      .attr("class", "y axis")
+      .call(d3.svg.axis().scale(y).orient("left").tickFormat(d3.format("d")))
+	  .append("text")
+      .attr("class", "label")
+      .attr("transform", "rotate(-90)")
+      .attr("x", -20)
+	  .attr("y", 20)
+      .attr("dy", ".201em")
+      .style("text-anchor", "end")
+	  .text("Glucose Reading");
+
+	  chart2.append("text")  
+		.text("Glucose Reading vs Day of Week")
+		.attr("x", width/2 - 100)
+		.attr("class", ".title")
+		.attr("font-size", "20px");
+	  
+});
+
+	
+	
+</script>
+
+
+
+</body>
+
